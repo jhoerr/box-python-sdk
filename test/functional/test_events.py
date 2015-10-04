@@ -85,6 +85,27 @@ def test_copy_folder_causes_copy_event(box_events, copy_target, created_subfolde
     assert_event(lambda: created_subfolder.copy(copy_target), 'ITEM_COPY', box_events.get_latest_stream_position())
 
 
+@pytest.mark.skipif(true, reason="requires admin token")
+def assert_enterprise_event(box_events):
+    # pylint:disable=redefined-outer-name
+    def helper(get_item, event_type):
+        created_after = datetime.datetime.now();
+        item = get_item()
+        events = box_events.get_enterprise_events(created_after=created_after)['entries']
+        assert len(events) == 1
+        event = events[0]
+        assert event['event_type'] == event_type
+        assert event['source']['name'] == item.name
+        assert event['source']['id'] == item.id
+
+    return helper
+
+def test_upload_causes_upload_event(uploaded_file, assert_event):
+    # pylint:disable=redefined-outer-name
+    updated_name = 'updated_enterprise_{0}'.format(uploaded_file.name)
+    assert_event(lambda: uploaded_file.rename(updated_name), 'RENAME')
+
+
 @pytest.mark.xfail(reason='trash event has no source')
 def test_delete_file_causes_trash_event(box_events, uploaded_file, assert_event):
     # pylint:disable=redefined-outer-name

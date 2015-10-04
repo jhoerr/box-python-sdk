@@ -162,3 +162,45 @@ class Events(BaseEndpoint):
         url = self.get_url()
         box_response = self._session.options(url)
         return box_response.json()['entries'][0]
+
+    def get_enterprise_events(self, limit=100, stream_position=0, event_type=[], created_after=None, created_before=None):
+        """
+        Get enterprise events. Requires an auth token from an enterprise admin account.
+
+        :param limit:
+            Maximum number of events to return.
+        :type limit:
+            `int`
+        :param stream_position:
+            The location in the stream from which to start getting events. 0 is the beginning of time. 'now' will
+            return no events and just current stream position.
+        :type stream_position:
+            `unicode`
+        :param event_type:
+            The type(s) of enterprise events to filter by.
+        :type event_type:
+            'array'
+        :param created_after:
+            A lower timebound on the timestamp of events returned
+        :type created_after:
+            :class:`datetime.date` or None
+        :param created_before:
+            An upper timebound on the timestamp of events returned
+        :type created_before:
+            :class:`datetime.date` or None
+        :returns:
+            JSON response from the Box /events endpoint. Contains the next stream position to use for the next call,
+            along with some number of events.
+        :rtype:
+            `dict`
+        """
+        url = self.get_url()
+        params = {
+            'limit': limit,
+            'stream_position': stream_position,
+            'stream_type': ','.join(event_type),
+            'created_after': created_after,
+            'created_before': created_before
+        }
+        box_response = self._session.get(url, params=params)
+        return box_response.json()
